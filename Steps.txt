@@ -1,0 +1,17 @@
+No proper jobs scraping, like if i type Android Developer, 
+it should show only android developer jobs,
+it is showing all sorts of job, it should be specific for the role user type
+
+
+
+
+
+
+i want to make an account for this website, so that i can save my profile and track my job applications.
+
+Also the Ai matching jobs against my resume is not working, 
+like if i upload my resume, it should show me the jobs 
+that are relevant to my resume, but it is not showing 
+me the jobs that are relevant to my resume.
+
+

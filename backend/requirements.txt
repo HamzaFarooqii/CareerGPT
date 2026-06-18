@@ -1,0 +1,77 @@
+# ============================================================
+# JobMatchr — Backend Dependencies
+# ============================================================
+# This file lists every Python package our project needs.
+# When you run `pip install -r requirements.txt`, pip reads
+# this file and installs each package.
+#
+# The == sign pins to an exact version (recommended for
+# reproducibility — so your code works the same everywhere).
+# ============================================================
+
+# --- Web Framework ---
+# FastAPI: The web framework that handles HTTP requests.
+# Think of it as the "router" — when someone hits /upload-resume,
+# FastAPI knows which function to call.
+fastapi==0.115.12
+
+# Uvicorn: The ASGI server that actually RUNS FastAPI.
+# FastAPI by itself is just code — uvicorn is the engine
+# that listens on port 8000 and forwards requests to FastAPI.
+uvicorn[standard]==0.34.2
+
+# python-multipart: Required for file uploads in FastAPI.
+# Without this, FastAPI can't read uploaded files (like PDFs).
+python-multipart==0.0.20
+
+# --- Database ---
+# Motor: Async MongoDB driver for Python.
+# "Async" means it doesn't block — while waiting for MongoDB
+# to respond, your server can handle other requests.
+motor==3.7.0
+
+# --- AI / LLM ---
+# google-genai: Official Google Generative AI SDK.
+# We use this for two things:
+#   1. Embeddings — converting text to numbers (vectors)
+#   2. LLM calls — asking Gemini to analyze/generate text
+google-genai==1.14.0
+
+# --- PDF Parsing ---
+# PyMuPDF: Reads PDF files and extracts text from them.
+# When a user uploads their resume as PDF, this library
+# reads every page and gives us the raw text.
+pymupdf==1.25.5
+
+# --- Environment Variables ---
+# python-dotenv: Loads variables from a .env file.
+# This keeps secrets (API keys, passwords) out of your code.
+python-dotenv==1.1.0
+
+# --- Validation ---
+# pydantic: Data validation library (comes with FastAPI).
+# Defines the "shape" of data — what fields a resume has,
+# what types they are, which are required.
+pydantic==2.11.3
+
+# --- Utilities ---
+# httpx: Modern HTTP client (we'll use it for scraping later).
+# Like the `requests` library, but supports async.
+httpx==0.28.1
+
+# numpy: Numerical computing library.
+# We use it for cosine similarity calculations between
+# embedding vectors (fast array math).
+numpy==2.2.5
+
+# --- Phase 2: Scraping ---
+# beautifulsoup4: HTML parser. After httpx fetches a webpage,
+# BeautifulSoup parses the HTML and lets you extract specific
+# elements (job titles, descriptions, etc.) using CSS selectors.
+# Think of it as "Ctrl+F on steroids" for HTML.
+beautifulsoup4==4.13.4
+
+# --- Phase 3: Matching Engine ---
+# No extra dependencies needed! We use numpy (already installed)
+# for in-memory vector similarity search. Fast enough for < 10K jobs.
+
