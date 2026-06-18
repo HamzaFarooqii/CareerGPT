@@ -1,4 +1,5 @@
-const API = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '';
+const API = `${API_BASE}/api`;
 
 const getToken = () => localStorage.getItem('jm_token');
 const authHeaders = () => {
@@ -213,5 +214,5 @@ export async function generateScreeningAnswers(data: {
 // ── System ─────────────────────────────────────────────────
 
 export async function healthCheck() {
-  return handleRes(await fetch('/health'));
+  return handleRes(await fetch(`${API_BASE}/health`));
 }

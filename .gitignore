@@ -26,3 +26,4 @@ frontend/.env.production
 .DS_Store
 Thumbs.db
 *.log
+*.tsbuildinfo
