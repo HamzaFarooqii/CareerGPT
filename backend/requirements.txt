@@ -75,3 +75,8 @@ beautifulsoup4==4.13.4
 # No extra dependencies needed! We use numpy (already installed)
 # for in-memory vector similarity search. Fast enough for < 10K jobs.
 
+# --- API Providers & Embeddings ---
+groq==0.9.0
+cohere==5.5.8
+sentence-transformers==3.0.1
+
