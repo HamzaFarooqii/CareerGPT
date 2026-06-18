@@ -17,7 +17,7 @@ class Settings:
 
     def __init__(self):
         # --- Database ---
-        self.MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+        self.MONGODB_URL: str = os.getenv("MONGODB_URL") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
         self.DATABASE_NAME: str = os.getenv("DATABASE_NAME", "jobmatchr")
 
         # --- Server ---
