@@ -59,6 +59,17 @@ async def lifespan(app: FastAPI):
     # Connect to MongoDB
     await db.connect_db()
 
+    # Pre-warm the embedding model (downloads ~90MB on first run)
+    # Doing this at startup avoids request timeouts on the first resume upload
+    if settings.EMBEDDING_PROVIDER == "local":
+        try:
+            from app.services.embedding_service import _get_local_model
+            print("⏳ Pre-loading embedding model (may take up to 60s on first run)...")
+            _get_local_model()
+            print("✅ Embedding model ready")
+        except Exception as e:
+            print(f"⚠️  Embedding model pre-load failed (will retry on first request): {e}")
+
     print(f"🌐 Server running at http://{settings.HOST}:{settings.PORT}")
     print(f"📖 API docs at http://localhost:{settings.PORT}/docs")
     print("=" * 50)

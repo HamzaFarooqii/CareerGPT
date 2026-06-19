@@ -18,10 +18,11 @@
 # AFTER the response is sent, without blocking the request.
 # ============================================================
 
+import asyncio
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response
 
 from app.config.database import db
 from app.models.job import JobExtracted, JobListItem, JobResponse, ScrapeResult
@@ -93,16 +94,28 @@ async def trigger_scrape(
     """
     source_list = [s.strip() for s in sources.split(",") if s.strip()]
 
-    results = await scrape_and_store(
-        query=query,
-        location=location,
-        max_pages=max_pages,
-        sources=source_list,
-        extract_with_llm=extract,
-        generate_embeddings=embed,
-    )
+    async def _run_scrape():
+        try:
+            await scrape_and_store(
+                query=query,
+                location=location,
+                max_pages=max_pages,
+                sources=source_list,
+                extract_with_llm=extract,
+                generate_embeddings=embed,
+            )
+        except Exception as e:
+            print(f"❌ Background scrape failed: {e}")
 
-    return results
+    # Fire-and-forget: return immediately, scrape in background
+    # This prevents Render/Vercel timeout from killing long scrapes
+    background_tasks.add_task(_run_scrape)
+
+    return Response(
+        content='{"status":"started","message":"Scraping started in background. Refresh Jobs list in 30-60 seconds to see results."}',
+        status_code=202,
+        media_type="application/json",
+    )
 
 
 # ── List all jobs ─────────────────────────────────────────
