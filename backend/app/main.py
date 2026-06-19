@@ -18,6 +18,7 @@
 # ============================================================
 
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -115,10 +116,17 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],        # Allow all origins (dev only)
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://*.vercel.app",           # All Vercel preview deployments
+        "https://careergpt.vercel.app",   # Your main Vercel domain (update if different)
+        os.getenv("FRONTEND_URL", ""),    # Custom domain if set via env var
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Catch all vercel subdomains
     allow_credentials=True,
-    allow_methods=["*"],        # Allow all HTTP methods
-    allow_headers=["*"],        # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
