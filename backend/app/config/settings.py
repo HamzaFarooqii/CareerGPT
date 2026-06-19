@@ -9,6 +9,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+import urllib.parse
+
+def sanitize_mongodb_url(url: str) -> str:
+    """Automatically URL-encode the password in MongoDB connection string if it has special characters."""
+    if not url or not url.startswith("mongodb"):
+        return url
+    try:
+        if "://" in url:
+            scheme, rest = url.split("://", 1)
+            if "@" in rest:
+                creds, host = rest.rsplit("@", 1)
+                if ":" in creds:
+                    user, password = creds.split(":", 1)
+                    decoded_pass = urllib.parse.unquote(password)
+                    encoded_pass = urllib.parse.quote_plus(decoded_pass)
+                    return f"{scheme}://{user}:{encoded_pass}@{host}"
+    except Exception:
+        pass
+    return url
+
+
 class Settings:
     """
     Application settings with multi-provider AI support.
@@ -17,7 +38,8 @@ class Settings:
 
     def __init__(self):
         # --- Database ---
-        self.MONGODB_URL: str = os.getenv("MONGODB_URL") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
+        raw_mongo_url = os.getenv("MONGODB_URL") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
+        self.MONGODB_URL: str = sanitize_mongodb_url(raw_mongo_url)
         self.DATABASE_NAME: str = os.getenv("DATABASE_NAME", "jobmatchr")
 
         # --- Server ---
