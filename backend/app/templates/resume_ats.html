@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ name }} — Resume</title>
+<style>
+  /* ============================================================
+     ATS-COMPLIANT RESUME TEMPLATE
+     ============================================================
+     Design principles:
+     - Single column layout (ATS parsers fail on multi-column)
+     - Standard system fonts (no custom fonts that ATS can't read)
+     - Clear section headers with standard names
+     - No tables, no text boxes, no images
+     - Proper heading hierarchy for ATS parsing
+     - Generous whitespace for human readability
+     ============================================================ */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Arial', 'Helvetica Neue', sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    background: #ffffff;
+    padding: 0.6in 0.7in;
+    max-width: 8.5in;
+  }
+
+  /* ── Header / Name Block ─────────────────────────────── */
+  .header {
+    border-bottom: 2px solid #1a3a5c;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+
+  .name {
+    font-size: 22pt;
+    font-weight: 700;
+    color: #1a3a5c;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .job-title-target {
+    font-size: 11pt;
+    color: #4a6a8a;
+    font-weight: 500;
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 9.5pt;
+    color: #444;
+  }
+
+  .contact-row span::before {
+    content: "• ";
+    color: #1a3a5c;
+  }
+  .contact-row span:first-child::before {
+    content: "";
+  }
+
+  /* ── Section Headers ─────────────────────────────────── */
+  .section {
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #1a3a5c;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #ccd8e8;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Summary ─────────────────────────────────────────── */
+  .summary-text {
+    font-size: 10.5pt;
+    color: #2a2a2a;
+    line-height: 1.55;
+  }
+
+  /* ── Skills ──────────────────────────────────────────── */
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  .skill-tag {
+    font-size: 9.5pt;
+    background: #eef3fa;
+    color: #1a3a5c;
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid #ccd8e8;
+    font-weight: 500;
+  }
+
+  .skill-tag.highlighted {
+    background: #dceeff;
+    border-color: #1a3a5c;
+    font-weight: 700;
+  }
+
+  /* ── Experience ──────────────────────────────────────── */
+  .experience-item {
+    margin-bottom: 12px;
+  }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2px;
+  }
+
+  .exp-title {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .exp-dates {
+    font-size: 9.5pt;
+    color: #666;
+    white-space: nowrap;
+    margin-left: 12px;
+    flex-shrink: 0;
+  }
+
+  .exp-company {
+    font-size: 10pt;
+    color: #4a6a8a;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .exp-bullets {
+    list-style: none;
+    padding: 0;
+  }
+
+  .exp-bullets li {
+    font-size: 10pt;
+    color: #2a2a2a;
+    padding-left: 14px;
+    position: relative;
+    margin-bottom: 3px;
+    line-height: 1.45;
+  }
+
+  .exp-bullets li::before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: #1a3a5c;
+    font-size: 9pt;
+  }
+
+  /* ── Education ───────────────────────────────────────── */
+  .education-item {
+    margin-bottom: 10px;
+  }
+
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .edu-degree {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .edu-dates {
+    font-size: 9.5pt;
+    color: #666;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+
+  .edu-school {
+    font-size: 10pt;
+    color: #4a6a8a;
+    font-weight: 500;
+  }
+
+  .edu-detail {
+    font-size: 9.5pt;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  /* ── Projects ────────────────────────────────────────── */
+  .project-item {
+    margin-bottom: 10px;
+  }
+
+  .project-name {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .project-tech {
+    font-size: 9.5pt;
+    color: #4a6a8a;
+    font-style: italic;
+    margin-bottom: 3px;
+  }
+
+  .project-desc {
+    font-size: 10pt;
+    color: #2a2a2a;
+    line-height: 1.45;
+  }
+
+  /* ── Certifications ──────────────────────────────────── */
+  .cert-list {
+    list-style: none;
+    columns: 2;
+    gap: 16px;
+  }
+
+  .cert-list li {
+    font-size: 10pt;
+    padding-left: 12px;
+    position: relative;
+    margin-bottom: 4px;
+    color: #2a2a2a;
+    break-inside: avoid;
+  }
+
+  .cert-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #1a3a5c;
+    font-weight: 700;
+  }
+
+  /* ── Page Break Handling ─────────────────────────────── */
+  .section { page-break-inside: avoid; }
+  .experience-item { page-break-inside: avoid; }
+  .education-item { page-break-inside: avoid; }
+
+  /* ── Raw text fallback (for AI-generated text) ───────── */
+  .raw-text {
+    font-size: 10pt;
+    color: #2a2a2a;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  @page {
+    size: Letter;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────────── -->
+<div class="header">
+  <div class="name">{{ name }}</div>
+  {% if job_title %}
+  <div class="job-title-target">{{ job_title }}</div>
+  {% endif %}
+  <div class="contact-row">
+    {% if contact.email %}<span>{{ contact.email }}</span>{% endif %}
+    {% if contact.phone %}<span>{{ contact.phone }}</span>{% endif %}
+    {% if contact.location %}<span>{{ contact.location }}</span>{% endif %}
+    {% if contact.linkedin %}<span>{{ contact.linkedin }}</span>{% endif %}
+    {% if contact.github %}<span>{{ contact.github }}</span>{% endif %}
+  </div>
+</div>
+
+<!-- ── SUMMARY ────────────────────────────────────────────── -->
+{% if summary %}
+<div class="section">
+  <div class="section-title">Professional Summary</div>
+  <div class="summary-text">{{ summary }}</div>
+</div>
+{% endif %}
+
+<!-- ── SKILLS ─────────────────────────────────────────────── -->
+{% if skills %}
+<div class="section">
+  <div class="section-title">Technical Skills</div>
+  <div class="skills-grid">
+    {% for skill in skills %}
+    <span class="skill-tag {% if skill in matched_keywords %}highlighted{% endif %}">{{ skill }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── EXPERIENCE ─────────────────────────────────────────── -->
+{% if experience %}
+<div class="section">
+  <div class="section-title">Professional Experience</div>
+  {% for exp in experience %}
+  <div class="experience-item">
+    {% if exp.raw is defined %}
+    <div class="raw-text">{{ exp.raw }}</div>
+    {% else %}
+    <div class="exp-header">
+      <div class="exp-title">{{ exp.title }}</div>
+      <div class="exp-dates">{{ exp.dates }}</div>
+    </div>
+    <div class="exp-company">{{ exp.company }}{% if exp.location %} · {{ exp.location }}{% endif %}</div>
+    {% if exp.bullets %}
+    <ul class="exp-bullets">
+      {% for bullet in exp.bullets %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── EDUCATION ──────────────────────────────────────────── -->
+{% if education %}
+<div class="section">
+  <div class="section-title">Education</div>
+  {% for edu in education %}
+  <div class="education-item">
+    {% if edu.raw is defined %}
+    <div class="raw-text">{{ edu.raw }}</div>
+    {% else %}
+    <div class="edu-header">
+      <div class="edu-degree">{{ edu.degree }}</div>
+      <div class="edu-dates">{{ edu.dates }}</div>
+    </div>
+    <div class="edu-school">{{ edu.school }}</div>
+    {% if edu.gpa %}<div class="edu-detail">GPA: {{ edu.gpa }}</div>{% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── PROJECTS ───────────────────────────────────────────── -->
+{% if projects %}
+<div class="section">
+  <div class="section-title">Projects</div>
+  {% for proj in projects %}
+  <div class="project-item">
+    {% if proj.raw is defined %}
+    <div class="raw-text">{{ proj.raw }}</div>
+    {% else %}
+    <div class="project-name">{{ proj.name }}</div>
+    {% if proj.technologies %}<div class="project-tech">{{ proj.technologies }}</div>{% endif %}
+    <div class="project-desc">{{ proj.description }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── CERTIFICATIONS ─────────────────────────────────────── -->
+{% if certifications %}
+<div class="section">
+  <div class="section-title">Certifications</div>
+  <ul class="cert-list">
+    {% for cert in certifications %}
+    <li>{{ cert }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+</body>
+</html>

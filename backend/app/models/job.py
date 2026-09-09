@@ -19,67 +19,45 @@ from pydantic import BaseModel, Field
 
 
 class JobRaw(BaseModel):
-    """
-    A job listing as scraped from the website — before any AI processing.
-    
-    This is the RAWEST form of data. Some fields might be missing,
-    formatting is inconsistent, skills are buried in free text.
-    
-    CONCEPT: Why keep raw data?
-    ───────────────────────────
-    Always save the original. If your LLM extraction has a bug,
-    you can re-run extraction on the raw data without re-scraping.
-    In data engineering, this is called "keeping the raw layer."
-    """
+    """A job listing as scraped — before AI processing."""
     title: str
     company: str
     location: str = ""
-    description: str                  # Full job description (raw text/HTML)
-    salary_range: str = ""            # "80k-120k" or "" if not listed
-    job_type: str = ""                # "Full-time", "Part-time", "Contract"
-    experience_required: str = ""     # "2-3 years" or "Fresh" — raw text
-    posted_date: str = ""
-    url: str                          # Direct link to the job posting
-    source: str                       # "rozee.pk", "indeed.pk", etc.
+    description: str
+    salary_range: str = ""
+    job_type: str = ""
+    experience_required: str = ""
+    posted_date: str = ""         # Raw string as found on site ("2 days ago", "Jun 15")
+    url: str                      # Direct link to the job posting
+    source: str                   # "rozee.pk", "greenhouse", "lever", etc.
+    canonical_url: str = ""       # Normalized URL for deduplication
+    company_url: str = ""         # Company homepage
 
 
 class JobExtracted(BaseModel):
-    """
-    Structured data that the LLM extracts from the raw description.
-    
-    This is the CLEAN version — normalized, consistent, ready for
-    comparison against resumes.
-    
-    CONCEPT: Structured Extraction
-    ──────────────────────────────
-    The raw description says: "We need someone who knows React,
-    preferably with Redux experience, 2+ years, MERN stack"
-    
-    The LLM extracts:
-    {
-        "required_skills": ["React", "JavaScript", "MongoDB", "Express", "Node.js"],
-        "preferred_skills": ["Redux"],
-        "experience_years_min": 2,
-        "education": "Bachelor's in CS or related"
-    }
-    
-    Now we can PROGRAMMATICALLY compare this against a resume.
-    "Does the candidate know React?" becomes a simple list lookup
-    instead of fuzzy text matching.
-    """
+    """Structured data extracted by LLM from raw description."""
     required_skills: list[str] = Field(default_factory=list)
     preferred_skills: list[str] = Field(default_factory=list)
     experience_years_min: int = 0
     experience_years_max: int = 0
     education: str = ""
-    job_type_normalized: str = ""     # "full-time" | "part-time" | "contract" | "remote" | "internship"
-    seniority_level: str = ""         # "intern" | "junior" | "mid" | "senior" | "lead"
+    job_type_normalized: str = ""
+    seniority_level: str = ""
     industry: str = ""
     key_responsibilities: list[str] = Field(default_factory=list)
 
 
+class SalaryNormalized(BaseModel):
+    """Normalized salary information."""
+    min_amount: Optional[int] = None
+    max_amount: Optional[int] = None
+    currency: str = "USD"
+    period: str = "yearly"        # "yearly" | "monthly" | "hourly"
+    raw: str = ""
+
+
 class JobResponse(BaseModel):
-    """What we send back when listing/viewing jobs."""
+    """Full job details sent to frontend."""
     id: str
     title: str
     company: str
@@ -91,13 +69,20 @@ class JobResponse(BaseModel):
     posted_date: str
     url: str
     source: str
+    canonical_url: str = ""
+    company_url: str = ""
     extracted: Optional[JobExtracted] = None
+    salary_normalized: Optional[SalaryNormalized] = None
     has_embedding: bool = False
+    is_active: bool = True
+    freshness_score: float = 1.0   # 0.0 (expired/old) → 1.0 (posted today)
+    days_old: Optional[int] = None
+    posted_at_parsed: Optional[str] = None
     created_at: str
 
 
 class JobListItem(BaseModel):
-    """Compact job listing for list views."""
+    """Compact job listing for list/card views."""
     id: str
     title: str
     company: str
@@ -105,12 +90,19 @@ class JobListItem(BaseModel):
     salary_range: str
     job_type: str
     source: str
+    url: str = ""
+    canonical_url: str = ""
+    company_url: str = ""
     has_embedding: bool = False
+    is_active: bool = True
+    freshness_score: float = 1.0
+    days_old: Optional[int] = None
+    posted_date: str = ""
     created_at: str
 
 
 class ScrapeResult(BaseModel):
-    """Summary of a scraping run."""
+    """Summary of a single scraping run per source."""
     source: str
     jobs_found: int
     jobs_new: int

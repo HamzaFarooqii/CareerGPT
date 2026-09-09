@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.database import db
 from app.config.settings import settings
-from app.routes import resume, jobs, matches, auth, coach, apply
+from app.routes import resume, jobs, matches, auth, coach, apply, admin, pdf, applications
 
 
 @asynccontextmanager
@@ -141,6 +141,9 @@ app.include_router(matches.router)
 app.include_router(auth.router)
 app.include_router(coach.router)
 app.include_router(apply.router)
+app.include_router(admin.router)
+app.include_router(pdf.router)
+app.include_router(applications.router)
 
 
 # ── Root endpoint ─────────────────────────────────────────

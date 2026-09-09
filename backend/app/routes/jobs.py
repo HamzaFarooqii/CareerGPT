@@ -173,15 +173,14 @@ async def list_jobs(
             {"search_location": {"$regex": loc_lower, "$options": "i"}},
         ]
 
-    # Execute query with projection (exclude large fields)
+    # Exclude expired/inactive jobs by default
+    query_filter["is_active"] = {"$ne": False}
+
+    # Execute query — sort by freshness_score descending (freshest first)
     cursor = collection.find(
         query_filter,
-        {
-            "description": 0,
-            "extracted": 0,
-            "embedding": 0,
-        }
-    ).sort("created_at", -1).skip(skip).limit(limit)
+        {"description": 0, "extracted": 0, "embedding": 0}
+    ).sort([("freshness_score", -1), ("created_at", -1)]).skip(skip).limit(limit)
 
     jobs = []
     async for doc in cursor:
@@ -193,7 +192,14 @@ async def list_jobs(
             salary_range=doc.get("salary_range", ""),
             job_type=doc.get("job_type", ""),
             source=doc.get("source", ""),
+            url=doc.get("url", ""),
+            canonical_url=doc.get("canonical_url", ""),
+            company_url=doc.get("company_url", ""),
             has_embedding=doc.get("has_embedding", False),
+            is_active=doc.get("is_active", True),
+            freshness_score=doc.get("freshness_score", 0.5),
+            days_old=doc.get("days_old"),
+            posted_date=doc.get("posted_date", ""),
             created_at=doc.get("created_at", datetime.now(timezone.utc)).isoformat(),
         ))
 
@@ -244,8 +250,14 @@ async def get_job(job_id: str):
         posted_date=doc.get("posted_date", ""),
         url=doc.get("url", ""),
         source=doc.get("source", ""),
+        canonical_url=doc.get("canonical_url", ""),
+        company_url=doc.get("company_url", ""),
         extracted=extracted,
         has_embedding=doc.get("has_embedding", False),
+        is_active=doc.get("is_active", True),
+        freshness_score=doc.get("freshness_score", 0.5),
+        days_old=doc.get("days_old"),
+        posted_at_parsed=doc["posted_at_parsed"].isoformat() if doc.get("posted_at_parsed") else None,
         created_at=doc.get("created_at", datetime.now(timezone.utc)).isoformat(),
     )
 

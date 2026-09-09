@@ -69,12 +69,18 @@ async def trigger_matching(request: MatchRequest):
             similarity_score=match.similarity_score,
             analysis=match.analysis,
             cover_letter=match.cover_letter,
+            rank_score=match.rank_score,
+            explanation=match.explanation,
+            freshness_score=job_doc.get("freshness_score", 1.0) if job_doc else 1.0,
+            days_old=job_doc.get("days_old") if job_doc else None,
             created_at=match.created_at,
             job_title=job_doc.get("title", "") if job_doc else "",
             job_company=job_doc.get("company", "") if job_doc else "",
             job_location=job_doc.get("location", "") if job_doc else "",
             job_url=job_doc.get("url", "") if job_doc else "",
             job_source=job_doc.get("source", "") if job_doc else "",
+            job_canonical_url=job_doc.get("canonical_url", "") if job_doc else "",
+            job_company_url=job_doc.get("company_url", "") if job_doc else "",
         ))
 
     return results

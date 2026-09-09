@@ -49,6 +49,8 @@ class MatchResult(BaseModel):
     similarity_score: float = Field(description="0-1: cosine similarity between embeddings")
     analysis: Optional[MatchAnalysis] = None
     cover_letter: Optional[str] = None
+    rank_score: float = 0.0          # 0-1 composite ranking score
+    explanation: str = ""            # Human-readable recommendation reason
     created_at: str = ""
 
 
@@ -60,6 +62,10 @@ class MatchResponse(BaseModel):
     similarity_score: float
     analysis: Optional[MatchAnalysis] = None
     cover_letter: Optional[str] = None
+    rank_score: float = 0.0
+    explanation: str = ""
+    freshness_score: float = 1.0
+    days_old: Optional[int] = None
     created_at: str
     # Job info (embedded so frontend doesn't need a second call)
     job_title: str = ""
@@ -67,6 +73,8 @@ class MatchResponse(BaseModel):
     job_location: str = ""
     job_url: str = ""
     job_source: str = ""
+    job_canonical_url: str = ""
+    job_company_url: str = ""
 
 
 class MatchRequest(BaseModel):

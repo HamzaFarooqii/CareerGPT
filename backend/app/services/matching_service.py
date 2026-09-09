@@ -28,6 +28,7 @@ from app.agents.matching_agent import analyze_match
 from app.config.database import db
 from app.models.match import MatchResult
 from app.services.vector_store import vector_store
+from app.services.ranking_service import compute_rank_score, generate_explanation
 
 
 async def run_matching(
@@ -150,21 +151,44 @@ async def run_matching(
             job_requirements=job_extracted,
         )
 
+        # Compute composite rank score
+        freshness_score = job_doc.get("freshness_score", 0.5)
+        days_old = job_doc.get("days_old")
+        rank_score = compute_rank_score(
+            semantic_score=similarity,
+            skill_match_score=analysis.skill_match_score,
+            experience_fit_score=analysis.experience_fit_score,
+            freshness_score=freshness_score,
+            source=job_doc.get("source", ""),
+        )
+        explanation = generate_explanation(
+            job_title=job_title,
+            company=job_doc.get("company", ""),
+            skill_match_score=analysis.skill_match_score,
+            experience_fit_score=analysis.experience_fit_score,
+            freshness_score=freshness_score,
+            days_old=days_old,
+            source=job_doc.get("source", ""),
+            recommendation=analysis.recommendation,
+            missing_skills=analysis.missing_skills,
+            matching_skills=analysis.matching_skills,
+            location=job_doc.get("location", ""),
+        )
+
         match_result = MatchResult(
             job_id=job_id,
             resume_id=resume_id,
             similarity_score=similarity,
             analysis=analysis,
+            rank_score=rank_score,
+            explanation=explanation,
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
         match_results.append(match_result)
 
-    # ── Step 5: Rank by overall score ─────────────────────
-    match_results.sort(
-        key=lambda m: (m.analysis.overall_score if m.analysis else 0),
-        reverse=True,
-    )
+    # ── Step 5: Rank by composite score ───────────────────
+    match_results.sort(key=lambda m: m.rank_score, reverse=True)
 
     print(f"\n📊 Rankings:")
     for i, m in enumerate(match_results[:10]):
@@ -209,6 +233,8 @@ async def run_matching(
                 "similarity_score": m.similarity_score,
                 "analysis": m.analysis.model_dump() if m.analysis else None,
                 "cover_letter": m.cover_letter,
+                "rank_score": m.rank_score,
+                "explanation": m.explanation,
                 "created_at": datetime.now(timezone.utc),
             }
             docs.append(doc)

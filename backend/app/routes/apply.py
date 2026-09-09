@@ -73,7 +73,10 @@ Write only the cover letter text:"""
 
 @router.post("/ats-resume")
 async def generate_ats_resume(body: ATSResumeRequest):
-    """Rewrite resume to be ATS-optimized for a specific job."""
+    """
+    Rewrite resume to be ATS-optimized for a specific job.
+    Returns the optimized resume text AND a full ATS score report.
+    """
     try:
         prompt = f"""Rewrite this resume to be perfectly optimized for the following job.
 
@@ -97,7 +100,25 @@ Instructions:
 Write the complete optimized resume:"""
 
         optimized = await ai_generate(prompt)
-        return {"optimized_resume": optimized, "job_title": body.job_title}
+
+        # Compute ATS score comparing optimized resume to job description
+        from app.services.ats_service import compute_ats_score
+        ats_report = compute_ats_score(optimized, body.job_description)
+
+        return {
+            "optimized_resume": optimized,
+            "job_title": body.job_title,
+            "ats_report": {
+                "score": ats_report.score,
+                "keyword_match_pct": ats_report.keyword_match_pct,
+                "matched_keywords": ats_report.matched_keywords,
+                "missing_keywords": ats_report.missing_keywords,
+                "suggestions": ats_report.suggestions,
+                "section_scores": ats_report.section_scores,
+                "total_jd_keywords": ats_report.total_jd_keywords,
+                "matched_count": ats_report.matched_count,
+            }
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

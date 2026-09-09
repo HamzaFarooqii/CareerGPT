@@ -17,23 +17,28 @@ from app.scrapers.remotive_scraper import RemotiveScraper
 from app.scrapers.jobicy_scraper import JobicyScraper
 from app.scrapers.rozee_scraper import RozeeScraper
 from app.services.embedding_service import generate_embedding
+from app.services.freshness_service import (
+    parse_posted_date,
+    compute_freshness_score,
+    build_canonical_url,
+)
 
 
 # Maps which sources are actually useful for each location context
 LOCATION_SOURCE_MAP = {
-    "pakistan":   ["rozee.pk"],
-    "remote":     ["remotive.com", "jobicy.com", "remoteok.com"],
-    "worldwide":  ["remotive.com", "jobicy.com", "remoteok.com", "wellfound.com"],
-    "usa":        ["remotive.com", "remoteok.com", "wellfound.com"],
-    "uk":         ["remotive.com", "remoteok.com", "wellfound.com"],
-    "canada":     ["remotive.com", "remoteok.com"],
+    "pakistan":   ["rozee.pk", "mustakbil.com"],
+    "remote":     ["remotive.com", "jobicy.com", "remoteok.com", "greenhouse", "lever"],
+    "worldwide":  ["remotive.com", "jobicy.com", "remoteok.com", "wellfound.com", "greenhouse", "lever"],
+    "usa":        ["remotive.com", "remoteok.com", "wellfound.com", "greenhouse", "lever"],
+    "uk":         ["remotive.com", "remoteok.com", "greenhouse", "lever"],
+    "canada":     ["remotive.com", "remoteok.com", "greenhouse"],
     "australia":  ["remotive.com", "remoteok.com"],
-    "germany":    ["remotive.com", "remoteok.com"],
+    "germany":    ["remotive.com", "remoteok.com", "greenhouse"],
     "uae":        ["remotive.com", "rozee.pk"],
 }
 
 # These sources only have remote jobs — don't pretend they have local jobs
-REMOTE_ONLY_SOURCES = {"remotive.com", "jobicy.com", "remoteok.com", "wellfound.com"}
+REMOTE_ONLY_SOURCES = {"remotive.com", "jobicy.com", "remoteok.com", "wellfound.com", "greenhouse", "lever"}
 
 # Location override for remote-only boards
 REMOTE_ONLY_LOCATION = "Remote"
@@ -56,6 +61,24 @@ def _get_scraper(source: str):
         try:
             from app.scrapers.wellfound_scraper import WellfoundScraper
             return WellfoundScraper()
+        except ImportError:
+            return None
+    if source == "greenhouse":
+        try:
+            from app.scrapers.greenhouse_scraper import GreenhouseScraper
+            return GreenhouseScraper()
+        except ImportError:
+            return None
+    if source == "lever":
+        try:
+            from app.scrapers.lever_scraper import LeverScraper
+            return LeverScraper()
+        except ImportError:
+            return None
+    if source == "mustakbil.com":
+        try:
+            from app.scrapers.mustakbil_scraper import MustakbilScraper
+            return MustakbilScraper()
         except ImportError:
             return None
     cls = mapping.get(source)
@@ -177,10 +200,16 @@ async def scrape_and_store(
             for i, job in enumerate(new_jobs):
                 print(f"\n   [{i+1}/{len(new_jobs)}]: {job.title[:50]}...")
 
+                # Parse posted date and compute freshness
+                posted_at = parse_posted_date(job.posted_date)
+                freshness_score, days_old = compute_freshness_score(
+                    posted_at, source, datetime.now(timezone.utc)
+                )
+                canonical = build_canonical_url(job.url)
+
                 job_doc: dict = {
                     "title": job.title,
                     "company": job.company,
-                    # Use the job's own location if it has one, else the effective location
                     "location": job.location if job.location else stored_location,
                     "description": job.description,
                     "salary_range": job.salary_range,
@@ -188,11 +217,17 @@ async def scrape_and_store(
                     "experience_required": job.experience_required,
                     "posted_date": job.posted_date,
                     "url": job.url,
+                    "canonical_url": canonical,
+                    "company_url": job.company_url if hasattr(job, 'company_url') else "",
                     "source": job.source,
-                    # Store both search context fields for proper filtering
                     "search_query": query.strip().lower(),
                     "search_location": location.strip().lower(),
                     "created_at": datetime.now(timezone.utc),
+                    "posted_at_parsed": posted_at,
+                    "freshness_score": freshness_score,
+                    "days_old": days_old,
+                    "is_active": True,
+                    "last_verified_at": None,
                     "extracted": None,
                     "has_embedding": False,
                     "embedding": None,
