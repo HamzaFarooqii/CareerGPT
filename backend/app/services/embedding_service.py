@@ -58,14 +58,15 @@ async def generate_embedding(text: str) -> list[float]:
     # ── Google Gemini ────────────────────────────────────────
     elif provider == "gemini":
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            result = genai.embed_content(
-                model=f"models/{settings.EMBEDDING_MODEL}",
-                content=text,
-                task_type="retrieval_document",
+            # google-genai (the SDK actually installed — see ai_client.py for
+            # why `google.generativeai` is the wrong, uninstalled package).
+            from google import genai
+            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            result = client.models.embed_content(
+                model=settings.EMBEDDING_MODEL,
+                contents=text,
             )
-            return result["embedding"]
+            return result.embeddings[0].values
         except Exception as e:
             print(f"⚠️ Gemini embedding failed: {e}, falling back to local")
             model = _get_local_model()

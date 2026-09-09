@@ -19,18 +19,41 @@ class JobicyScraper(BaseScraper):
 
     API_URL = "https://jobicy.com/api/v2/remote-jobs"
 
-    # Jobicy uses industry slugs
+    # Jobicy industry slugs — MUST be one of the values from
+    # GET /api/v2/remote-jobs?get=industries (verified live on 2026-09-09,
+    # API v2.2.16). Passing anything else (e.g. the old "tech"/"design"
+    # slugs this map used to use) makes the whole request fail with
+    # HTTP 400, so every search silently returned zero jobs.
     INDUSTRY_MAP = {
-        "software": "tech",
-        "developer": "tech",
-        "engineer": "tech",
-        "python": "tech",
-        "react": "tech",
-        "data": "tech",
-        "ai": "tech",
-        "devops": "tech",
+        "software": "engineering",
+        "developer": "engineering",
+        "engineer": "engineering",
+        "engineering": "engineering",
+        "android": "engineering",
+        "ios": "engineering",
+        "mobile": "engineering",
+        "python": "engineering",
+        "react": "engineering",
+        "frontend": "engineering",
+        "backend": "engineering",
+        "fullstack": "engineering",
+        "full-stack": "engineering",
+        "web": "engineering",
+        "devops": "engineering",
+        "cybersecurity": "cybersecurity",
+        "security": "cybersecurity",
+        "data": "data-science",
+        "machine learning": "data-science",
+        "ai": "data-science",
+        "qa": "qa-testing",
+        "testing": "qa-testing",
+        "design": "design-multimedia",
+        "ux": "web-app-design",
+        "ui": "web-app-design",
+        "product": "management",
         "marketing": "marketing",
-        "design": "design",
+        "sales": "seller",
+        "seo": "seo",
     }
 
     def __init__(self):
@@ -41,7 +64,7 @@ class JobicyScraper(BaseScraper):
         for keyword, industry in self.INDUSTRY_MAP.items():
             if keyword in query_lower:
                 return industry
-        return "tech"
+        return "engineering"
 
     async def scrape_jobs(
         self, query: str, location: str = "", max_pages: int = 3
@@ -72,11 +95,28 @@ class JobicyScraper(BaseScraper):
         industry = self._resolve_industry(query)
         count = max_pages * 20
 
-        # Jobicy uses 'tag' for keyword search and 'industry' for category
-        tag = query.replace(" ", "-").lower()
-        url = f"{self.API_URL}?count={count}&industry={industry}&tag={tag}"
+        # ── Relevance setup (computed up front — also drives the API tag) ──
+        GENERIC_WORDS = {
+            "developer", "engineer", "dev", "software", "senior", "junior",
+            "lead", "staff", "principal", "mid", "remote", "job", "jobs",
+            "position", "role", "opportunity", "specialist", "expert",
+        }
 
-        print(f"\n🔍 [{self.source_name}] Searching: industry='{industry}', tag='{tag}'")
+        query_lower = query.lower()
+        query_words = [w for w in query_lower.split() if len(w) > 2]
+        specific_words = [w for w in query_words if w not in GENERIC_WORDS]
+
+        # Jobicy's 'tag' param wants a SINGLE bare keyword (e.g. "android"),
+        # not a hyphenated compound phrase like "android-developer" — passing
+        # the whole query as one slug matches nothing even when real, relevant
+        # jobs exist. Use the most specific word alone, or skip the tag
+        # entirely for a generic query and let 'industry' alone narrow it.
+        tag = specific_words[0] if specific_words else ""
+        url = f"{self.API_URL}?count={count}&industry={industry}"
+        if tag:
+            url += f"&tag={tag}"
+
+        print(f"\n🔍 [{self.source_name}] Searching: industry='{industry}', tag='{tag or '(none)'}'")
 
         try:
             response = await self._rate_limited_get(url)
@@ -91,17 +131,6 @@ class JobicyScraper(BaseScraper):
 
             data = response.json()
             all_jobs = data.get("jobs", [])
-
-            # ── Strict relevance filtering ────────────────────────
-            GENERIC_WORDS = {
-                "developer", "engineer", "dev", "software", "senior", "junior",
-                "lead", "staff", "principal", "mid", "remote", "job", "jobs",
-                "position", "role", "opportunity", "specialist", "expert",
-            }
-
-            query_lower = query.lower()
-            query_words = [w for w in query_lower.split() if len(w) > 2]
-            specific_words = [w for w in query_words if w not in GENERIC_WORDS]
 
             def _job_score(job: dict) -> int:
                 title = job.get("jobTitle", "").lower()
@@ -120,18 +149,41 @@ class JobicyScraper(BaseScraper):
                         score += 5
                 return score
 
+            def _mentions_specific_word(job: dict) -> bool:
+                """True if this job is actually about the specific (non-generic)
+                query word(s). This is the real relevance gate; _job_score is
+                only used for ranking among jobs that already pass this gate.
+
+                A specific word in the title is enough on its own (titles
+                describe the actual role). Without a title hit, require ALL
+                specific words to co-occur in the description — a single
+                common word (e.g. "data") turning up incidentally in an
+                unrelated posting shouldn't qualify a multi-word query like
+                "data scientist".
+                """
+                title = job.get("jobTitle", "").lower()
+                if any(w in title for w in specific_words):
+                    return True
+                desc_snippet = job.get("jobDescription", "")[:400].lower()
+                return all(w in desc_snippet for w in specific_words)
+
             scored = [(job, _job_score(job)) for job in all_jobs]
 
+            # If we have specific words (e.g. "android"), a job MUST mention one
+            # of them somewhere to qualify. No numeric threshold: a generic word
+            # like "developer" scoring points is never enough on its own. If
+            # nothing mentions the specific term, the honest answer is zero
+            # results from this source — never unrelated titles to pad the count.
             if specific_words:
-                filtered_jobs = [j for j, s in scored if s >= 10]
+                filtered_jobs = [j for j, s in scored if _mentions_specific_word(j)]
                 filtered_jobs.sort(key=lambda j: _job_score(j), reverse=True)
             else:
+                # No specific words (broad query) — safe to relax further.
                 filtered_jobs = [j for j, s in scored if s > 0]
                 filtered_jobs.sort(key=lambda j: _job_score(j), reverse=True)
-
-            if len(filtered_jobs) < 5:
-                scored.sort(key=lambda x: x[1], reverse=True)
-                filtered_jobs = [j for j, s in scored[:30] if s > 0] or all_jobs[:20]
+                if len(filtered_jobs) < 5:
+                    by_score = sorted(scored, key=lambda x: x[1], reverse=True)
+                    filtered_jobs = [j for j, _ in by_score[:30]] or all_jobs[:20]
 
 
             # Convert to JobRaw

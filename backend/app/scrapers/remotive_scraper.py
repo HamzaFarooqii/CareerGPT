@@ -145,26 +145,55 @@ class RemotiveScraper(BaseScraper):
                         score += 5
                 return score
 
+            def _mentions_specific_word(job: dict) -> bool:
+                """True if this job is actually about the specific (non-generic)
+                query word(s) — the real relevance gate; the numeric score
+                below is only for ranking among jobs that already pass this
+                gate.
+
+                A specific word in the TITLE is the reliable signal — titles
+                are written to describe the actual role, so ANY ONE specific
+                word matching there is enough. Without a title hit, we fall
+                back to description/tags, but then require ALL specific words
+                to co-occur, not just one: a common word like "data" turns up
+                incidentally in unrelated postings, so for a query like "data
+                scientist" a single stray "data" mention shouldn't qualify.
+                Tags are trusted only when the tag list is short — some
+                sources (e.g. dev-staffing marketplaces on Remotive) tag every
+                posting with 40+ technologies for discoverability, so a match
+                against a huge tag list is noise, not a real signal.
+                """
+                title = job.get("title", "").lower()
+                if any(w in title for w in specific_words):
+                    return True
+                desc_snippet = job.get("description", "")[:500].lower()
+                job_tags = job.get("tags", [])
+                combined = desc_snippet
+                if len(job_tags) <= 8:
+                    combined += " " + " ".join(job_tags).lower()
+                return all(w in combined for w in specific_words)
+
             # Score & filter all jobs
             scored = [(job, _job_score(job)) for job in all_jobs]
 
-            # If we have specific words, require at least one match in title or tags
+            # If we have specific words (e.g. "android"), a job MUST mention one
+            # of them somewhere to qualify — a generic word like "developer"
+            # scoring points is not enough on its own. No numeric threshold here:
+            # a job either mentions the specific term or it doesn't. If nothing
+            # does, the honest answer is zero results from this source — never
+            # a list of unrelated titles just to pad the count.
             if specific_words:
-                filtered_jobs = [
-                    job for job, score in scored
-                    if score >= 10  # At least one specific word in title or tags
-                ]
-                # Sort by relevance
+                filtered_jobs = [job for job, score in scored if _mentions_specific_word(job)]
                 filtered_jobs.sort(key=lambda j: _job_score(j), reverse=True)
             else:
-                # No specific words — just sort by any match
+                # No specific words (a broad/generic query) — any match is fine,
+                # and it's safe to relax further since there's no specific term
+                # to betray by doing so.
                 filtered_jobs = [job for job, score in scored if score > 0]
                 filtered_jobs.sort(key=lambda j: _job_score(j), reverse=True)
-
-            # Fallback: if filtering is too strict, take best matches
-            if len(filtered_jobs) < 5:
-                scored.sort(key=lambda x: x[1], reverse=True)
-                filtered_jobs = [j for j, s in scored[:30] if s > 0] or all_jobs[:20]
+                if len(filtered_jobs) < 5:
+                    by_score = sorted(scored, key=lambda x: x[1], reverse=True)
+                    filtered_jobs = [j for j, _ in by_score[:30]] or all_jobs[:20]
 
             # Also filter by location if specified (and it's not just "Pakistan" for remote jobs)
             if location and location.lower() not in ["pakistan", "worldwide", "", "remote"]:

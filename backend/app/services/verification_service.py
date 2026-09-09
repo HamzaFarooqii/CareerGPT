@@ -23,7 +23,13 @@ class VerificationResult:
     duration_seconds: float
 
 
-DEAD_STATUS_CODES = {404, 410, 403, 301}  # 301 = redirect away = possibly deleted
+# 403 deliberately excluded: it means the SITE is blocking this request (and
+# this checker identifies itself as "CareerGPT-Bot", which many sites will
+# reject on sight), not that the posting itself is gone. Treating it as dead
+# would mass-deactivate perfectly live jobs from any bot-averse site. 301 is
+# excluded too — a redirect (e.g. to a "similar jobs" page after a reorg)
+# isn't proof of deletion either.
+DEAD_STATUS_CODES = {404, 410}
 
 
 async def _check_url(client: httpx.AsyncClient, url: str) -> bool:

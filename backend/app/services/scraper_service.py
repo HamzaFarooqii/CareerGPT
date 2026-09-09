@@ -25,8 +25,17 @@ from app.services.freshness_service import (
 
 
 # Maps which sources are actually useful for each location context
+#
+# NOTE: rozee.pk and mustakbil.com are both client-rendered (Angular/React)
+# job boards with no discoverable static search API — a plain HTTP fetch
+# never sees real listings (confirmed by hand: rozee.pk's SSR page ships
+# strings but no job cards, mustakbil.com's /jobs/search endpoint 404s on
+# any query param). They're kept in the list so they contribute automatically
+# once someone fixes them with a headless browser, but until then they
+# always return 0 jobs — so working API sources are listed alongside them
+# for Pakistan/UAE too, instead of leaving those locations with nothing.
 LOCATION_SOURCE_MAP = {
-    "pakistan":   ["rozee.pk", "mustakbil.com"],
+    "pakistan":   ["rozee.pk", "mustakbil.com", "remotive.com", "jobicy.com", "remoteok.com"],
     "remote":     ["remotive.com", "jobicy.com", "remoteok.com", "greenhouse", "lever"],
     "worldwide":  ["remotive.com", "jobicy.com", "remoteok.com", "wellfound.com", "greenhouse", "lever"],
     "usa":        ["remotive.com", "remoteok.com", "wellfound.com", "greenhouse", "lever"],
@@ -34,7 +43,7 @@ LOCATION_SOURCE_MAP = {
     "canada":     ["remotive.com", "remoteok.com", "greenhouse"],
     "australia":  ["remotive.com", "remoteok.com"],
     "germany":    ["remotive.com", "remoteok.com", "greenhouse"],
-    "uae":        ["remotive.com", "rozee.pk"],
+    "uae":        ["remotive.com", "rozee.pk", "jobicy.com", "remoteok.com"],
 }
 
 # These sources only have remote jobs — don't pretend they have local jobs

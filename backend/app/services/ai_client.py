@@ -29,12 +29,21 @@ def _call_groq(prompt: str, system: str = "") -> str:
 
 
 def _call_gemini(prompt: str, system: str = "") -> str:
-    """Call Google Gemini API. Free: 1,500 req/day."""
-    import google.generativeai as genai
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel(settings.LLM_MODEL)
+    """Call Google Gemini API. Free: 1,500 req/day.
+
+    Uses the `google-genai` SDK (the one actually pinned in requirements.txt
+    as google-genai==1.14.0) — NOT the older `google-generativeai` package,
+    which exposes a different `import google.generativeai` path and isn't
+    installed here. Mixing the two up means this call silently
+    ModuleNotFoundErrors and this whole fallback provider never actually runs.
+    """
+    from google import genai
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
     full_prompt = f"{system}\n\n{prompt}" if system else prompt
-    response = model.generate_content(full_prompt)
+    response = client.models.generate_content(
+        model=settings.LLM_MODEL,
+        contents=full_prompt,
+    )
     return response.text
 
 

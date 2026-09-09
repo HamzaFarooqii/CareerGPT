@@ -35,6 +35,7 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
 @router.post("/scrape", response_model=list[ScrapeResult])
 async def trigger_scrape(
+    background_tasks: BackgroundTasks,
     query: str = Query(
         ...,
         description="Search term (e.g., 'software engineer', 'python developer')",

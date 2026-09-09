@@ -76,7 +76,12 @@ beautifulsoup4==4.13.4
 # for in-memory vector similarity search. Fast enough for < 10K jobs.
 
 # --- API Providers & Embeddings ---
-groq==0.9.0
+# groq must stay >=1.x — 0.9.0 forwards a `proxies=` kwarg into its internal
+# httpx.Client() that httpx>=0.28 (required by google-genai, below) no longer
+# accepts at all, so every single Groq call raised
+# "Client.__init__() got an unexpected keyword argument 'proxies'". Confirmed
+# by hand on 2026-09-09: 0.9.0 crashes immediately, 1.7.0 works.
+groq==1.7.0
 cohere==5.5.8
 sentence-transformers==3.0.1
 

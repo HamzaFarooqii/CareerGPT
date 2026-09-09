@@ -42,8 +42,17 @@ class RemoteOKScraper(BaseScraper):
             print(f"   ❌ RemoteOK API error: {e}")
             return []
 
-        # Filter by query terms
-        query_terms = [t.lower() for t in query.split()]
+        # ── Strict relevance filtering ────────────────────────
+        # Generic words that appear in ALL dev job titles — ignore for
+        # matching so "developer" alone doesn't pass everything through.
+        GENERIC_WORDS = {
+            "developer", "engineer", "dev", "software", "senior", "junior",
+            "lead", "staff", "principal", "mid", "remote", "job", "jobs",
+            "position", "role", "opportunity", "specialist", "expert",
+        }
+        query_terms = [t.lower() for t in query.split() if len(t) > 2]
+        specific_terms = [t for t in query_terms if t not in GENERIC_WORDS]
+
         matched: list[JobRaw] = []
 
         for item in data:
@@ -55,9 +64,21 @@ class RemoteOKScraper(BaseScraper):
             description = item.get("description", "") or ""
             company = item.get("company", "") or ""
 
-            # Check if job matches query
-            searchable = f"{title} {' '.join(tags)} {description}".lower()
-            if not any(term in searchable for term in query_terms):
+            # Relevance gate: a specific word (e.g. "android") in the TITLE is
+            # the reliable signal — titles are written to describe the actual
+            # role. Falling back to "any specific word anywhere in the
+            # description" is too loose for multi-word queries: a common word
+            # like "data" turns up incidentally in unrelated postings (an
+            # Irrigation Technician job mentioning "field data" would
+            # otherwise match "data scientist"). So when title doesn't match,
+            # require ALL specific words to co-occur somewhere, not just one.
+            title_lower = title.lower()
+            if specific_terms:
+                if not any(term in title_lower for term in specific_terms):
+                    searchable = f"{title_lower} {' '.join(tags)} {description}".lower()
+                    if not all(term in searchable for term in specific_terms):
+                        continue
+            elif query_terms and not any(term in title_lower for term in query_terms):
                 continue
 
             job_url = item.get("url", "") or f"https://remoteok.com/l/{item.get('id', '')}"

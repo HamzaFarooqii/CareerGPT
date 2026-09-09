@@ -72,7 +72,7 @@ export default function Jobs() {
   const [filterSearch, setFilterSearch] = useState('');
   const [scrapeResult, setScrapeResult] = useState<any[] | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: string } | null>(null);
-  const [activeSources, setActiveSources] = useState<string[]>(['rozee.pk']);
+  const [activeSources, setActiveSources] = useState<string[]>(['rozee.pk', 'remotive.com', 'remoteok.com']);
 
   const showToast = (msg: string, type = 'success') => {
     setToast({ msg, type });
@@ -83,7 +83,7 @@ export default function Jobs() {
   const handleLocationChange = (loc: string) => {
     setLocationInput(loc);
     const l = loc.toLowerCase();
-    if (l === 'pakistan' || l === 'uae') setActiveSources(['rozee.pk']);
+    if (l === 'pakistan' || l === 'uae') setActiveSources(['rozee.pk', 'remotive.com', 'remoteok.com']);
     else if (l === 'remote' || l === 'worldwide') setActiveSources(['remotive.com', 'jobicy.com', 'remoteok.com']);
     else setActiveSources(['remotive.com', 'remoteok.com', 'wellfound.com']);
   };
