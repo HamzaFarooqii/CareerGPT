@@ -32,9 +32,9 @@ function CopyBtn({ text }: { text: string }) {
 
 function ResultBox({ content, title, onDownload }: { content: string; title: string; onDownload?: () => void }) {
   return (
-    <div style={{ marginTop: 16, background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
-        <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent)', fontFamily: 'var(--mono)' }}>
+    <div style={{ marginTop: 18, background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+        <span style={{ fontSize: '0.76rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent)', fontFamily: 'var(--mono)' }}>
           🤖 {title}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -46,7 +46,7 @@ function ResultBox({ content, title, onDownload }: { content: string; title: str
           )}
         </div>
       </div>
-      <div style={{ padding: '16px', fontSize: '0.82rem', color: 'var(--text-2)', lineHeight: 1.8, maxHeight: 360, overflowY: 'auto' }}>
+      <div style={{ padding: '22px 24px', fontSize: '0.95rem', color: 'var(--text-2)', lineHeight: 1.85, maxHeight: 560, overflowY: 'auto' }}>
         <ReactMarkdown>{content}</ReactMarkdown>
       </div>
     </div>
@@ -186,7 +186,7 @@ export default function JobApplyModal({ job, onClose }: Props) {
         style={{
           position: 'fixed', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '90vw', maxWidth: 760, maxHeight: '88vh',
+          width: '92vw', maxWidth: 1040, height: '90vh', maxHeight: 920,
           background: 'var(--bg-2)', border: '1px solid var(--border)',
           borderRadius: 'var(--r-xl)', zIndex: 1001,
           display: 'flex', flexDirection: 'column',
@@ -195,54 +195,54 @@ export default function JobApplyModal({ job, onClose }: Props) {
         }}
       >
         {/* Header */}
-        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+        <div style={{ padding: '26px 32px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.62rem', color: 'var(--accent)', fontFamily: 'var(--mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
+              <div style={{ fontSize: '0.68rem', color: 'var(--accent)', fontFamily: 'var(--mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
                 ⚡ AI Apply Toolkit
               </div>
-              <h3 style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: 2 }}>{job.title}</h3>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-2)' }}>
+              <h3 style={{ fontWeight: 800, fontSize: '1.4rem', marginBottom: 4 }}>{job.title}</h3>
+              <div style={{ fontSize: '0.92rem', color: 'var(--text-2)' }}>
                 {job.company && <span>{job.company}</span>}
                 {job.location && <span style={{ color: 'var(--text-3)' }}> · {job.location}</span>}
                 {job.url && (
-                  <a href={job.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', marginLeft: 10, fontSize: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <ExternalLink size={11} /> View Job
+                  <a href={job.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', marginLeft: 10, fontSize: '0.82rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <ExternalLink size={12} /> View Job
                   </a>
                 )}
               </div>
             </div>
             <button className="btn btn-ghost btn-sm" onClick={onClose} style={{ flexShrink: 0 }}>
-              <X size={16} />
+              <X size={20} />
             </button>
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 4, marginTop: 16, background: 'var(--surface)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
+          <div style={{ display: 'flex', gap: 4, marginTop: 20, background: 'var(--surface)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{
-                display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px',
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
                 borderRadius: 7, border: 'none', cursor: 'pointer',
-                fontSize: '0.78rem', fontWeight: 600, fontFamily: 'var(--font)',
+                fontSize: '0.88rem', fontWeight: 600, fontFamily: 'var(--font)',
                 background: tab === t.id ? 'var(--accent)' : 'transparent',
                 color: tab === t.id ? '#fff' : 'var(--text-3)', transition: 'all 0.15s',
               }}>
-                <t.icon size={13} /> {t.label}
+                <t.icon size={15} /> {t.label}
               </button>
             ))}
           </div>
         </div>
 
         {/* Scrollable body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 32px', fontSize: '0.92rem' }}>
 
           {/* Resume selector (shared across tabs) */}
-          <div style={{ marginBottom: 16, padding: '12px 16px', background: 'rgba(99,102,241,0.06)', border: '1px solid var(--accent-border)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <User size={14} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <div style={{ marginBottom: 20, padding: '16px 20px', background: 'rgba(99,102,241,0.06)', border: '1px solid var(--accent-border)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <User size={18} style={{ color: 'var(--accent)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.62rem', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 5 }}>Your Resume</div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 7 }}>Your Resume</div>
               <select className="input" value={selectedResumeId} onChange={e => setSelectedResumeId(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '0.82rem', height: 'auto' }}>
+                style={{ padding: '10px 14px', fontSize: '0.9rem', height: 'auto', width: '100%' }}>
                 <option value="">— No resume (AI generates from scratch) —</option>
                 {resumes.map((r: any) => <option key={r.id} value={r.id}>{r.title || 'Untitled Resume'}</option>)}
               </select>
@@ -263,7 +263,7 @@ export default function JobApplyModal({ job, onClose }: Props) {
                   ))}
                 </div>
               </div>
-              <button className="btn btn-primary" onClick={handleCoverLetter} disabled={coverLoading} style={{ width: '100%' }}>
+              <button className="btn btn-primary" onClick={handleCoverLetter} disabled={coverLoading} style={{ width: '100%', padding: '15px 20px', fontSize: '0.98rem' }}>
                 {coverLoading ? <><Loader size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> Generating Cover Letter...</> : <><FileText size={14} /> Generate Cover Letter</>}
               </button>
               {coverResult && (
@@ -325,7 +325,7 @@ export default function JobApplyModal({ job, onClose }: Props) {
                 </div>
               )}
 
-              <button className="btn btn-primary" onClick={handleATSResume} disabled={atsLoading} style={{ width: '100%' }}>
+              <button className="btn btn-primary" onClick={handleATSResume} disabled={atsLoading} style={{ width: '100%', padding: '15px 20px', fontSize: '0.98rem' }}>
                 {atsLoading ? <><Loader size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> Optimizing Resume...</> : <><Zap size={14} /> Generate ATS-Optimized Resume</>}
               </button>
 
@@ -363,7 +363,7 @@ export default function JobApplyModal({ job, onClose }: Props) {
                 </button>
               </div>
 
-              <button className="btn btn-primary" onClick={handleScreening} disabled={screenLoading || questions.filter(q => q.trim()).length === 0} style={{ width: '100%' }}>
+              <button className="btn btn-primary" onClick={handleScreening} disabled={screenLoading || questions.filter(q => q.trim()).length === 0} style={{ width: '100%', padding: '15px 20px', fontSize: '0.98rem' }}>
                 {screenLoading ? <><Loader size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> Generating Answers...</> : <><Sparkles size={14} /> Generate AI Answers</>}
               </button>
 
