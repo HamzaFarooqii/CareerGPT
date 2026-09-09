@@ -109,3 +109,16 @@ class ScrapeResult(BaseModel):
     jobs_duplicate: int
     errors: list[str] = Field(default_factory=list)
     duration_seconds: float
+
+
+class ScrapeStartedResponse(BaseModel):
+    """
+    What POST /api/jobs/scrape actually returns: an immediate acknowledgement,
+    not per-source results — scraping runs in the background afterward (so a
+    slow scrape can't trip Render/Vercel's request timeout). Per-source
+    ScrapeResult stats are only ever logged server-side, never returned here;
+    the frontend should re-fetch the job list after a short delay instead of
+    expecting counts in this response.
+    """
+    status: str
+    message: str

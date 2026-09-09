@@ -7,6 +7,7 @@ import {
   Activity
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Scene3D      = lazy(() => import('./components/Scene3D'));
 const Dashboard    = lazy(() => import('./pages/Dashboard'));
@@ -172,17 +173,24 @@ function AppShell() {
           </div>
         }>
           <PageTransition>
-            <Routes>
-              <Route path="/"         element={<Dashboard />} />
-              <Route path="/resumes"  element={<Resumes />} />
-              <Route path="/jobs"     element={<Jobs />} />
-              <Route path="/matches"  element={<Matches />} />
-              <Route path="/coach"    element={<CareerCoach />} />
-              <Route path="/apply"    element={<ApplyAgent />} />
-              <Route path="/profile"  element={<Profile />} />
-              <Route path="/login"    element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
+            {/* Keyed by route so a crash on one page can't strand every other
+                page behind the same fallback screen — navigating away
+                remounts a fresh boundary. Scopes the blast radius of an
+                uncaught render error to "this page is broken", not "the
+                whole app is a blank screen" (see ErrorBoundary.tsx). */}
+            <ErrorBoundary key={location.pathname}>
+              <Routes>
+                <Route path="/"         element={<Dashboard />} />
+                <Route path="/resumes"  element={<Resumes />} />
+                <Route path="/jobs"     element={<Jobs />} />
+                <Route path="/matches"  element={<Matches />} />
+                <Route path="/coach"    element={<CareerCoach />} />
+                <Route path="/apply"    element={<ApplyAgent />} />
+                <Route path="/profile"  element={<Profile />} />
+                <Route path="/login"    element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Routes>
+            </ErrorBoundary>
           </PageTransition>
         </Suspense>
       </main>

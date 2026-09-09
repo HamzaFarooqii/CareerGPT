@@ -22,10 +22,10 @@ import asyncio
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from app.config.database import db
-from app.models.job import JobExtracted, JobListItem, JobResponse, ScrapeResult
+from app.models.job import JobExtracted, JobListItem, JobResponse, ScrapeStartedResponse
 from app.services.scraper_service import scrape_and_store
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
@@ -33,7 +33,7 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
 # ── Scrape trigger endpoint ──────────────────────────────
 
-@router.post("/scrape", response_model=list[ScrapeResult])
+@router.post("/scrape", response_model=ScrapeStartedResponse, status_code=202)
 async def trigger_scrape(
     background_tasks: BackgroundTasks,
     query: str = Query(
@@ -112,10 +112,9 @@ async def trigger_scrape(
     # This prevents Render/Vercel timeout from killing long scrapes
     background_tasks.add_task(_run_scrape)
 
-    return Response(
-        content='{"status":"started","message":"Scraping started in background. Refresh Jobs list in 30-60 seconds to see results."}',
-        status_code=202,
-        media_type="application/json",
+    return ScrapeStartedResponse(
+        status="started",
+        message="Scraping started in background. Refresh Jobs list in 30-60 seconds to see results.",
     )
 
 

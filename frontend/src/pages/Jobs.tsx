@@ -112,9 +112,21 @@ export default function Jobs() {
     const loc = locationInput;
     try {
       const results = await scrapeJobs(q, loc, 3, activeSources);
-      setScrapeResult(results);
-      const totalNew = results.reduce((s: number, r: any) => s + (r.jobs_new || 0), 0);
-      showToast(`✅ ${totalNew} new jobs scraped for "${q}" in ${loc}`);
+      // The backend replies immediately with {status, message} and scrapes in
+      // the background (so Render/Vercel don't time out on slow scrapes) —
+      // it does NOT return per-source stats synchronously. Only treat it as
+      // the old array-of-ScrapeResult shape when it actually is one; a plain
+      // object was previously fed straight into `.reduce()` / `.filter()`
+      // (below, in the render), which threw with no error boundary to catch
+      // it and blanked the entire app.
+      if (Array.isArray(results)) {
+        setScrapeResult(results);
+        const totalNew = results.reduce((s: number, r: any) => s + (r.jobs_new || 0), 0);
+        showToast(`✅ ${totalNew} new jobs scraped for "${q}" in ${loc}`);
+      } else {
+        setScrapeResult(null);
+        showToast(results?.message || `Scraping started for "${q}" in ${loc}...`);
+      }
       setLastQuery(q.toLowerCase());
       setLastLocation(loc.toLowerCase());
       setTimeout(() => load(q.toLowerCase(), loc.toLowerCase()), 2000);
@@ -273,7 +285,7 @@ export default function Jobs() {
 
         {/* Scrape results summary */}
         <AnimatePresence>
-          {scrapeResult && (
+          {Array.isArray(scrapeResult) && scrapeResult.length > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
               {scrapeResult.filter((r: any) => !r.errors?.[0]?.includes('Skipped')).map((r: any, i: number) => (
                 <div key={i} style={{ padding: '8px 14px', borderRadius: 8, background: r.errors?.length ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', border: `1px solid ${r.errors?.length ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`, fontSize: '0.76rem' }}>
