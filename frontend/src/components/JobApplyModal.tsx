@@ -170,27 +170,30 @@ export default function JobApplyModal({ job, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Click-outside-to-close catcher — deliberately NOT dimmed/blurred:
+          this opens as a side panel next to the job list (like the job
+          detail drawer), not a centered modal covering the page, so the
+          list underneath needs to stay fully visible and readable. */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 1000 }}
+        style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
       />
 
-      {/* Modal */}
+      {/* Side panel — slides in from the right, full height, next to the
+          page content rather than floating centered over it. */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         style={{
-          position: 'fixed', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '92vw', maxWidth: 1040, height: '90vh', maxHeight: 920,
-          background: 'var(--bg-2)', border: '1px solid var(--border)',
-          borderRadius: 'var(--r-xl)', zIndex: 1001,
+          position: 'fixed', top: 0, right: 0, bottom: 0,
+          width: 640, maxWidth: '94vw', height: '100vh',
+          background: 'var(--bg-2)', borderLeft: '1px solid var(--border)',
+          zIndex: 1001,
           display: 'flex', flexDirection: 'column',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+          boxShadow: '-24px 0 64px rgba(0,0,0,0.5)',
           overflow: 'hidden',
         }}
       >
